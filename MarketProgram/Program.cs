@@ -6,64 +6,106 @@ namespace MarketProgram
 {
     class Program
     {
+        
+        static Dictionary<string, string> users = new Dictionary<string, string>()
+        {
+            { "admin", "admin" }, 
+            { "seller1", "seller1" }
+        };
+
+        static Dictionary<string, string> roles = new Dictionary<string, string>()
+        {
+            { "admin", "Admin" },
+            { "seller1", "Seller" }
+        };
+
+        static Dictionary<string, (double Price, double SalePrice, int Stock)> products = new Dictionary<string, (double, double, int)>()
+        {
+            {"Alma", (1.0, 1.5, 10)},
+            {"Banana", (1.5, 2.0, 10)},
+            {"Süd", (0.8, 1.2, 10)},
+            {"Çörək", (0.5, 0.8, 10)},
+            {"Yumurta", (0.05, 0.1, 100)}
+        };
+
         static void Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
 
-            Dictionary<string, (double Price, int Stock)> products = new Dictionary<string, (double, int)>()
+            while (true)
             {
-                {"Alma", (1.5, 10)},
-                {"Banana", (2.0, 10)},
-                {"Süd", (1.2, 10)},
-                {"Çörək", (0.8, 10)},
-                {"Yumurta", (0.1, 100)}
-            };
+                string username;
+                string role = Login(out username);
 
-            List<string> cart = new List<string>();
+                if (role == "Admin")
+                {
+                    AdminMenu(username);
+                }
+                else if (role == "Seller")
+                {
+                    SellerMenu(username);
+                }
+                else
+                {
+                    Console.WriteLine("Login uğursuz oldu. Yenidən cəhd edin.");
+                }
+            }
+        }
+
+        static string Login(out string username)
+        {
+            Console.WriteLine("\nMarket proqramına xoş gəlmisiniz!");
+            Console.Write("İstifadəçi adı: ");
+            username = Console.ReadLine();
+            Console.Write("Şifrə: ");
+            string password = Console.ReadLine();
+
+            if (users.ContainsKey(username) && users[username] == password)
+            {
+                return roles[username];
+            }
+            else
+            {
+                Console.WriteLine("Yanlış istifadəçi adı və ya şifrə.");
+                return string.Empty;
+            }
+        }
+
+        static void AdminMenu(string username)
+        {
             bool continueShopping = true;
 
             while (continueShopping)
             {
-                Console.WriteLine("\nMarket proqramına xoş gəlmisiniz!");
+                Console.WriteLine("\nAdmin Panelinə xoş gəlmisiniz!");
                 Console.WriteLine("1. Məhsullara bax");
                 Console.WriteLine("2. Məhsul əlavə et");
                 Console.WriteLine("3. Məhsulu çıxar");
-                Console.WriteLine("4. Səbətə bax");
-                Console.WriteLine("5. Ümumi məbləği yoxla");
-                Console.WriteLine("6. Ödəniş et");
-                Console.WriteLine("7. Məhsul sat");
-                Console.WriteLine("8. Məhsul yenilə");
-                Console.WriteLine("9. Çıxış");
+                Console.WriteLine("4. Məhsul yenilə");
+                Console.WriteLine("5. Yeni satıcı əlavə et");
+                Console.WriteLine("6. Çıxış");
                 Console.Write("Seçiminizi edin: ");
                 string choice = Console.ReadLine();
 
                 switch (choice)
                 {
                     case "1":
-                        ViewProducts(products);
+                        ViewProducts();
                         break;
                     case "2":
-                        AddProduct(products, cart);
+                        AddProduct();
                         break;
                     case "3":
-                        RemoveProduct(cart);
+                        RemoveProduct();
                         break;
                     case "4":
-                        ViewCart(cart);
+                        RestockProduct();
                         break;
                     case "5":
-                        CheckTotal(products, cart);
+                        AddSeller();
+                        continueShopping = false;
                         break;
                     case "6":
-                        Checkout(products, cart);
-                        break;
-                    case "7":
-                        SellProduct(products);
-                        break;
-                    case "8":
-                        RestockProduct(products);
-                        break;
-                    case "9":
                         continueShopping = false;
                         Console.WriteLine("Proqramdan çıxılır...");
                         break;
@@ -74,85 +116,125 @@ namespace MarketProgram
             }
         }
 
-        static void ViewProducts(Dictionary<string, (double Price, int Stock)> products)
+        static void SellerMenu(string username)
         {
-            Console.WriteLine("\nMəhsullar:");
-            foreach (var product in products)
-            {
-                Console.WriteLine($"{product.Key}: {product.Value.Price} AZN (Stock: {product.Value.Stock})");
-            }
-        }
+            bool continueShopping = true;
 
-        static void AddProduct(Dictionary<string, (double Price, int Stock)> products, List<string> cart)
-        {
-            Console.Write("\nƏlavə etmək istədiyiniz məhsulun adını yazın: ");
-            string name = Console.ReadLine();
-            if (products.ContainsKey(name) && products[name].Stock > 0)
+            while (continueShopping)
             {
-                cart.Add(name);
-                products[name] = (products[name].Price, products[name].Stock - 1);
-                Console.WriteLine($"{name} səbətə əlavə edildi.");
-            }
-            else
-            {
-                Console.WriteLine("Belə məhsul tapılmadı və ya məhsul stokda yoxdur.");
-            }
-        }
+                Console.WriteLine("\nSatıcı Panelinə xoş gəlmisiniz!");
+                Console.WriteLine("1. Məhsul sat");
+                Console.WriteLine("2. Çıxış");
+                Console.Write("Seçiminizi edin: ");
+                string choice = Console.ReadLine();
 
-        static void RemoveProduct(List<string> cart)
-        {
-            Console.Write("\nÇıxarmaq istədiyiniz məhsulun adını yazın: ");
-            string name = Console.ReadLine();
-            if (cart.Contains(name))
-            {
-                cart.Remove(name);
-                Console.WriteLine($"{name} səbətdən çıxarıldı.");
-            }
-            else
-            {
-                Console.WriteLine("Bu məhsul səbətdə tapılmadı.");
-            }
-        }
-
-        static void ViewCart(List<string> cart)
-        {
-            if (cart.Count == 0)
-            {
-                Console.WriteLine("\nSəbət boşdur.");
-            }
-            else
-            {
-                Console.WriteLine("\nSəbət:");
-                foreach (var product in cart)
+                switch (choice)
                 {
-                    Console.WriteLine(product);
+                    case "1":
+                        SellProduct();
+                        break;
+                    case "2":
+                        continueShopping = false;
+                        Console.WriteLine("Proqramdan çıxılır...");
+                        break;
+                    default:
+                        Console.WriteLine("Yanlış seçim, yenidən cəhd edin.");
+                        break;
                 }
             }
         }
 
-        static void CheckTotal(Dictionary<string, (double Price, int Stock)> products, List<string> cart)
+        static void ViewProducts()
         {
-            double total = 0;
-            foreach (var product in cart)
+            Console.WriteLine("\nMəhsullar:");
+            foreach (var product in products)
             {
-                total += products[product].Price;
+                Console.WriteLine($"{product.Key}: Alış qiyməti {product.Value.Price} AZN, Satış qiyməti {product.Value.SalePrice} AZN (Stock: {product.Value.Stock})");
             }
-            Console.WriteLine($"\nÜmumi məbləğ: {total} AZN");
         }
 
-        static void Checkout(Dictionary<string, (double Price, int Stock)> products, List<string> cart)
+        static void AddProduct()
         {
-            double total = 0;
-            foreach (var product in cart)
+            Console.Write("\nYeni məhsulun adını yazın: ");
+            string name = Console.ReadLine();
+            Console.Write("Qiymətini yazın: ");
+            if (double.TryParse(Console.ReadLine(), out double price))
             {
-                total += products[product].Price;
+                Console.Write("Satış qiymətini yazın: ");
+                if (double.TryParse(Console.ReadLine(), out double salePrice))
+                {
+                    Console.Write("Stok miqdarını yazın: ");
+                    if (int.TryParse(Console.ReadLine(), out int stock))
+                    {
+                        products[name] = (price, salePrice, stock);
+                        Console.WriteLine($"{name} məhsulu əlavə edildi.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Yanlış stok miqdarı.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Yanlış satış qiyməti.");
+                }
             }
-            Console.WriteLine($"\nÖdəniş tamamlandı. Ümumi məbləğ: {total} AZN");
-            cart.Clear();
-            Console.WriteLine("Səbət boşaldıldı.");
+            else
+            {
+                Console.WriteLine("Yanlış qiymət.");
+            }
         }
 
-        static void SellProduct(Dictionary<string, (double Price, int Stock)> products)
+        static void RemoveProduct()
+        {
+            Console.Write("\nÇıxarmaq istədiyiniz məhsulun adını yazın: ");
+            string name = Console.ReadLine();
+            if (products.ContainsKey(name))
+            {
+                products.Remove(name);
+                Console.WriteLine($"{name} məhsulu çıxarıldı.");
+            }
+            else
+            {
+                Console.WriteLine("Bu məhsul tapılmadı.");
+            }
+        }
+
+        static void RestockProduct()
+        {
+            Console.Write("\nYeniləmək istədiyiniz məhsulun adını yazın: ");
+            string name = Console.ReadLine();
+            Console.Write("Yeniləmək istədiyiniz miqdarı yazın: ");
+            if (int.TryParse(Console.ReadLine(), out int quantity) && products.ContainsKey(name))
+            {
+                products[name] = (products[name].Price, products[name].SalePrice, products[name].Stock + quantity);
+                Console.WriteLine($"{quantity} ədəd {name} əlavə edildi. Yeni stok: {products[name].Stock}");
+            }
+            else
+            {
+                Console.WriteLine("Yanlış miqdar və ya məhsul adı.");
+            }
+        }
+
+        static void AddSeller()
+        {
+            Console.Write("\nYeni satıcının istifadəçi adını yazın: ");
+            string newUsername = Console.ReadLine();
+            Console.Write("Yeni satıcının şifrəsini yazın: ");
+            string newPassword = Console.ReadLine();
+            if (!users.ContainsKey(newUsername))
+            {
+                users[newUsername] = newPassword;
+                roles[newUsername] = "Seller";
+                Console.WriteLine($"Yeni satıcı {newUsername} əlavə edildi.");
+            }
+            else
+            {
+                Console.WriteLine("Bu istifadəçi adı artıq mövcuddur.");
+            }
+        }
+
+        static void SellProduct()
         {
             Console.Write("\nSatmaq istədiyiniz məhsulun adını yazın: ");
             string name = Console.ReadLine();
@@ -161,29 +243,13 @@ namespace MarketProgram
             {
                 if (products[name].Stock >= quantity)
                 {
-                    products[name] = (products[name].Price, products[name].Stock - quantity);
+                    products[name] = (products[name].Price, products[name].SalePrice, products[name].Stock - quantity);
                     Console.WriteLine($"{quantity} ədəd {name} satıldı.");
                 }
                 else
                 {
                     Console.WriteLine("Kifayət qədər stok yoxdur.");
                 }
-            }
-            else
-            {
-                Console.WriteLine("Yanlış miqdar və ya məhsul adı.");
-            }
-        }
-
-        static void RestockProduct(Dictionary<string, (double Price, int Stock)> products)
-        {
-            Console.Write("\nYeniləmək istədiyiniz məhsulun adını yazın: ");
-            string name = Console.ReadLine();
-            Console.Write("Yeniləmək istədiyiniz miqdarı yazın: ");
-            if (int.TryParse(Console.ReadLine(), out int quantity) && products.ContainsKey(name))
-            {
-                products[name] = (products[name].Price, products[name].Stock + quantity);
-                Console.WriteLine($"{quantity} ədəd {name} əlavə edildi. Yeni stok: {products[name].Stock}");
             }
             else
             {
