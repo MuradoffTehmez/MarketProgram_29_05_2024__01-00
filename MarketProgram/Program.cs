@@ -9,7 +9,7 @@ namespace MarketProgram
         
         static Dictionary<string, string> users = new Dictionary<string, string>()
         {
-            { "admin", "admin" }, 
+            { "admin", "admin" },
             { "seller1", "seller1" }
         };
 
@@ -27,6 +27,8 @@ namespace MarketProgram
             {"Çörək", (0.5, 0.8, 10)},
             {"Yumurta", (0.05, 0.1, 100)}
         };
+
+        static List<(string ProductName, int Quantity, double TotalPrice, DateTime SaleTime)> salesHistory = new List<(string, int, double, DateTime)>();
 
         static void Main(string[] args)
         {
@@ -71,6 +73,7 @@ namespace MarketProgram
             }
         }
 
+
         static void AdminMenu(string username)
         {
             bool continueShopping = true;
@@ -83,7 +86,9 @@ namespace MarketProgram
                 Console.WriteLine("3. Məhsulu çıxar");
                 Console.WriteLine("4. Məhsul yenilə");
                 Console.WriteLine("5. Yeni satıcı əlavə et");
-                Console.WriteLine("6. Çıxış");
+                Console.WriteLine("6. Məhsul sat");
+                Console.WriteLine("7. Satış tarixçəsinə bax");
+                Console.WriteLine("8. Çıxış");
                 Console.Write("Seçiminizi edin: ");
                 string choice = Console.ReadLine();
 
@@ -106,6 +111,12 @@ namespace MarketProgram
                         continueShopping = false;
                         break;
                     case "6":
+                        SellProduct(username);
+                        break;
+                    case "7":
+                        ViewSalesHistory();
+                        break;
+                    case "8":
                         continueShopping = false;
                         Console.WriteLine("Proqramdan çıxılır...");
                         break;
@@ -113,6 +124,15 @@ namespace MarketProgram
                         Console.WriteLine("Yanlış seçim, yenidən cəhd edin.");
                         break;
                 }
+            }
+        }
+
+        static void ViewSalesHistory()
+        {
+            Console.WriteLine("\nSatış Tarixçəsi:");
+            foreach (var sale in salesHistory)
+            {
+                Console.WriteLine($"Məhsul: {sale.ProductName}, Miqdar: {sale.Quantity}, Cəmi məbləğ: {sale.TotalPrice} AZN, Tarix: {sale.SaleTime}");
             }
         }
 
@@ -131,7 +151,7 @@ namespace MarketProgram
                 switch (choice)
                 {
                     case "1":
-                        SellProduct();
+                        SellProduct(username);
                         break;
                     case "2":
                         continueShopping = false;
@@ -234,7 +254,7 @@ namespace MarketProgram
             }
         }
 
-        static void SellProduct()
+        static void SellProduct(string username)
         {
             Console.Write("\nSatmaq istədiyiniz məhsulun adını yazın: ");
             string name = Console.ReadLine();
@@ -243,8 +263,11 @@ namespace MarketProgram
             {
                 if (products[name].Stock >= quantity)
                 {
+                    double totalPrice = quantity * products[name].SalePrice;
                     products[name] = (products[name].Price, products[name].SalePrice, products[name].Stock - quantity);
                     Console.WriteLine($"{quantity} ədəd {name} satıldı.");
+                    RecordSale(name, quantity, totalPrice);
+                    PrintReceipt(name, quantity, totalPrice);
                 }
                 else
                 {
@@ -255,6 +278,20 @@ namespace MarketProgram
             {
                 Console.WriteLine("Yanlış miqdar və ya məhsul adı.");
             }
+        }
+
+        static void RecordSale(string productName, int quantity, double totalPrice)
+        {
+            salesHistory.Add((productName, quantity, totalPrice, DateTime.Now));
+        }
+
+        static void PrintReceipt(string productName, int quantity, double totalPrice)
+        {
+            Console.WriteLine("\n----- Qəbz -----");
+            Console.WriteLine($"Məhsul: {productName}");
+            Console.WriteLine($"Miqdar: {quantity}");
+            Console.WriteLine($"Cəmi məbləğ: {totalPrice} AZN");
+            Console.WriteLine($"Satış tarixi: {DateTime.Now}");
         }
     }
 }
